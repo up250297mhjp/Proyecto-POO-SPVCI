@@ -5,3 +5,27 @@ from pathlib import Path
 import mysql.connector
 from dotenv import load_dotenv
 import pandas as pd
+
+class Producto:
+    def __init__(self, productoID, descripcion, precio):
+        self.productoID = productoID
+        self.descripcion = descripcion
+        self.__precio = precio
+
+    def get_precio(self):
+        return self.__precio
+
+    def imprimir(self):
+        print(f"Producto ID: {self.productoID}, Descripción: {self.descripcion}, Precio: {self.__precio}")
+
+class Detalle_orden:
+    def __init__(self, detalleID, cantidad, producto: Producto):
+        self.detalleID = detalleID
+        self.cantidad = cantidad
+        self.producto = producto
+
+    def subtotal_detalle(self) -> float:
+        pass
+
+    def imprimir(self):
+        print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}, Subtotal: {self.subtotal_detalle()}")
