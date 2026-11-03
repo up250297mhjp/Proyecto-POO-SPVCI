@@ -42,7 +42,7 @@ class Detalle_orden:
         return subtotal
 
     def imprimir(self):
-        print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}, Subtotal: {self.subtotal_detalle()}")
+        print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}")
 
 class Orden:
     def __init__(self, ordenID, detalles: Detalle_orden):
@@ -55,13 +55,23 @@ class Orden:
         return total
 
     def addItem(self, detalleID, cantidad, producto: Producto):
-        detalle = Detalle_orden(detalleID, cantidad, producto)
+        detalle = Detalle_orden(detalleID, cantidad, producto, Detalle_orden.subtotal_detalle())
         self.detalles.append(detalle)
+        Orden.insertar_orden(self, self.ordenID, self.fecha, self.detalles)
 
     def imprimir(self):
         print(f"Orden ID: {self.ordenID}, Fecha: {self.fecha}, Total: {self.total_orden()}")
         for detalle in self.detalles:
             detalle.imprimir()
+
+    def insertar_orden(self, ordenID, fecha, detalles):
+        sql = "INSERT INTO ordenes (fecha) VALUES (%s)"
+
+        cursor.execute(sql, (fecha))
+        conn.commit()
+        print(f"Orden :'{ordenID}' insertada correctamente.")
+
+
 
 def registrar_nueva_orden():
     print("\n--- REGISTRAR NUEVA ORDEN ---")
