@@ -9,7 +9,7 @@ import pandas as pd
 load_dotenv(Path(__file__).resolve() / ".env", override=True)
 config = {
     "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT")),
+    "port": os.getenv("DB_PORT"),
     "database": os.getenv("DB_NAME"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
@@ -92,6 +92,24 @@ def ver_ordenes():
     print(f"{'-'*15} | {'-'*15} | {'-'*10} | {'-'*10} | {'-'*10}")
     
 
+def registrar_orden():
+    print("\n--- NUEVA ORDEN ---")
+    try:
+        ordenID = int(input("Ingrese el ID de la orden: "))
+    except ValueError:
+        print("Error: El ID debe ser un número entero.")
+        return
+
+    mi_orden = Orden(ordenID)
+    contador_detalles = 1
+
+    while True:
+        try:
+            prod_id = int(input("\nIngrese el ID del producto: "))
+        except ValueError:
+            print("ID inválido, intente de nuevo.")
+            continue
+        
 
 def main():
     while True:
