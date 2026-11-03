@@ -6,7 +6,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import pandas as pd
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
+load_dotenv(Path(__file__).resolve() / ".env", override=True)
 config = {
     "host": os.getenv("DB_HOST"),
     "port": int(os.getenv("DB_PORT")),
@@ -14,6 +14,10 @@ config = {
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
 }
+
+# Conexión
+conn = mysql.connector.connect(**config)
+cursor = conn.cursor(dictionary=True)  # dictionary=True → resultados como dict
 class Producto:
     def __init__(self, productoID, descripcion, precio, stock):
         self.productoID = productoID
@@ -47,16 +51,28 @@ class Orden:
         self.detalles = []
 
     def total_orden(self) -> float:
-        pass
+        total = sum(detalle.subtotal_detalle() for detalle in self.detalles)
+        return total
 
-    def addItemaddItem(detalleID, cantidad, producto:Producto):
-        pass
+    def addItem(self, detalleID, cantidad, producto: Producto):
+        detalle = Detalle_orden(detalleID, cantidad, producto)
+        self.detalles.append(detalle)
 
     def imprimir(self):
         print(f"Orden ID: {self.ordenID}, Fecha: {self.fecha}, Total: {self.total_orden()}")
         for detalle in self.detalles:
             detalle.imprimir()
 
+def Menu():
+    print("Bienvenido al sistema")
+    print("")
+
+
 def main():
     pass
+
+if __name__ == "__main__":
+    os.system('cls' if os.name == 'nt' else 'clear')
+    main()
+    print("\n. . . H e c h o")
 
