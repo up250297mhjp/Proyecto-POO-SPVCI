@@ -29,3 +29,22 @@ class Detalle_orden:
 
     def imprimir(self):
         print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}, Subtotal: {self.subtotal_detalle()}")
+
+class Orden:
+    def __init__(self, ordenID, fecha, detalles: Detalle_orden):
+        self.ordenID = ordenID
+        self.fecha = datetime.now()
+        self.detalles = []
+
+    def total_orden(self) -> float:
+        pass
+
+    def addItemaddItem(detalleID, cantidad, producto:Producto):
+        pass
+
+    def imprimir(self):
+        print(f"Orden ID: {self.ordenID}, Fecha: {self.fecha}, Total: {self.total_orden()}")
+        for detalle in self.detalles:
+            detalle.imprimir()
+
+
