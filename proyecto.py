@@ -63,13 +63,40 @@ class Orden:
         for detalle in self.detalles:
             detalle.imprimir()
 
+def registrar_nueva_orden():
+    print("\n--- REGISTRAR NUEVA ORDEN ---")
+
 def Menu():
-    print("Bienvenido al sistema")
-    print("")
+    print("\n==============================")
+    print("   SISTEMA DE GESTIÓN DE ÓRDENES")
+    print("==============================")
+    print("1. Registrar nueva orden")
+    print("2. Ver órdenes")
+    print("3. Salir")
+
+#todo Se visualiza la tabla con la orden que seleccione el ususario
+def ver_ordenes():
+    print("\n------- VER ÓRDENES --------")
+    orden_id = input("Ingrese el ID de la orden que desea consultar: ").strip()
+    print(f"\n{'Orden ID:':<15} {'Producto ID':<15} {'Cantidad':<10} {'Precio Unitario ':<10} {'Subtotal':>10}")
+    print(f"{'-'*15} | {'-'*15} | {'-'*10} | {'-'*10} | {'-'*10}")
+    
 
 
 def main():
-    pass
+    while True:
+        Menu()
+        opcion = input("\nSeleccione una opción: ").strip()
+        
+        if opcion == "1":
+            registrar_nueva_orden()
+        elif opcion == "2":
+            ver_ordenes()
+        elif opcion == "3":
+            print("\nSaliendo del sistema...")
+            break
+        else:
+            print("\nOpción inválida. Por favor, intente de nuevo.")
 
 if __name__ == "__main__":
     os.system('cls' if os.name == 'nt' else 'clear')
