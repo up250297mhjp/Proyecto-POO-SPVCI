@@ -6,7 +6,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import pandas as pd
 
-load_dotenv(Path(__file__).resolve() / ".env", override=True)
+load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 config = {
     "host": os.getenv("DB_HOST"),
     "port": os.getenv("DB_PORT"),
@@ -45,7 +45,7 @@ class Detalle_orden:
         print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}")
 
 class Orden:
-    def __init__(self, ordenID, fecha, detalles: Detalle_orden):
+    def __init__(self, ordenID, detalles: Detalle_orden):
         self.ordenID = ordenID
         self.fecha = datetime.now()
         self.detalles = []
