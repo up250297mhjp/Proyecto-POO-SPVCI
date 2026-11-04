@@ -21,11 +21,22 @@ SPVCI_5.5 es un sistema que permite gestionar las ventas de un negocio y llevar 
 ## Estructura del proyecto
 
 ```
+## Estructura del proyecto
+
+```
 Proyecto-POO-SPVCI/
-├── proyecto.py        # Archivo principal
-├── Contenido/         # Material de apoyo
-├── README.md
-└── .gitignore
+├── .vscode/
+│   └── settings.json      # Configuración del editor
+├── Contenido/
+│   └── POO Java ejercicios.pdf   # Material de apoyo
+├── .env                   # Credenciales locales (no se sube al repositorio)
+├── .env-example           
+├── .gitignore
+├── conexion.py            # Conexión a la base de datos
+├── esquema.sql            # Esquema de la base de datos
+├── proyecto.py            # Archivo principal
+├── proyecto1.py           # Versión/archivo adicional del proyecto
+└── README.md
 ```
 
 ## Cómo ejecutarlo
