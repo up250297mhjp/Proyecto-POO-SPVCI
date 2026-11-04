@@ -1,10 +1,8 @@
-import os, sys
+import os
 from datetime import datetime
-from abc import ABC, abstractmethod
 from pathlib import Path
 import mysql.connector
 from dotenv import load_dotenv
-import pandas as pd
 
 load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 config = {
