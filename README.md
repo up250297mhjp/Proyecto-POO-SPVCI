@@ -22,8 +22,6 @@ SPVCI_5.5 es un sistema que permite gestionar las ventas de un negocio y llevar 
 
 ```
 ## Estructura del proyecto
-
-```
 Proyecto-POO-SPVCI/
 ├── .vscode/
 │   └── settings.json      # Configuración del editor
