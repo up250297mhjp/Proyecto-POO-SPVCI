@@ -16,6 +16,8 @@ config = {
 # Conexión
 conn = mysql.connector.connect(**config)
 cursor = conn.cursor(dictionary=True)  # dictionary=True → resultados como dict
+
+
 class Producto:
     def __init__(self, productoID, descripcion, precio, stock):
         self.productoID = productoID
@@ -27,7 +29,10 @@ class Producto:
         return self.__precio
 
     def imprimir(self):
-        print(f"Producto ID: {self.productoID}, Descripción: {self.descripcion}, Precio: {self.__precio}")
+        print(
+            f"Producto ID: {self.productoID}, Descripción: {self.descripcion}, Precio: {self.__precio}"
+        )
+
 
 class Detalle_orden:
     def __init__(self, detalleID, cantidad, producto: Producto):
@@ -44,15 +49,20 @@ class Detalle_orden:
         print("Se imprime el precio unitario: ", precio_unitario)
         id_generado = cursor.lastrowid  # Obtener el ID generado por la base de datos
         sql = "INSERT INTO detalleordenes (ordenID, productoID, cantidad, precioUnitario) VALUES (%s, %s, %s, %s)"
-        cursor.execute(sql, (ordenID, self.producto.productoID, self.cantidad, precio_unitario))
+        cursor.execute(
+            sql, (ordenID, self.producto.productoID, self.cantidad, precio_unitario)
+        )
         conn.commit()
         self.imprimir()
 
     def imprimir(self):
-        print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, "
-              f"Producto: {self.producto.descripcion}, "
-              f"Precio: ${self.producto.get_precio():.2f}")
+        print(
+            f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, "
+            f"Producto: {self.producto.descripcion}, "
+            f"Precio: ${self.producto.get_precio():.2f}"
+        )
         print(f"    Subtotal: ${self.subtotal_detalle():.2f}")
+
 
 class Orden:
     def __init__(self, ordenID, detalles: Detalle_orden):
@@ -80,27 +90,32 @@ class Orden:
         try:
             sql = "INSERT INTO ordenes (fecha) VALUES (%s)"
             cursor.execute(sql, (self.fecha,))
-            self.ordenID = cursor.lastrowid      # ID generado por MySQL
+            self.ordenID = cursor.lastrowid  # ID generado por MySQL
 
             for d in self.detalles:
                 cursor.execute(
                     """INSERT INTO detalleordenes
                        (ordenID, productoID, cantidad, precioUnitario)
                        VALUES (%s, %s, %s, %s)""",
-                    (self.ordenID, d.producto.productoID, d.cantidad, d.producto.get_precio())
+                    (
+                        self.ordenID,
+                        d.producto.productoID,
+                        d.cantidad,
+                        d.producto.get_precio(),
+                    ),
                 )
                 # Descuenta el stock
                 cursor.execute(
                     """UPDATE Productos SET stock = stock - %s
                        WHERE productoID = %s""",
-                    (d.cantidad, d.producto.productoID)
+                    (d.cantidad, d.producto.productoID),
                 )
 
             conn.commit()
             print(f"\nOrden #{self.ordenID} registrada correctamente.")
             return True
         except Exception as e:
-            conn.rollback()   # deshace TODO lo de esta orden
+            conn.rollback()  # deshace TODO lo de esta orden
             print(f"\nNo se pudo guardar la orden: {e}")
             return False
 
@@ -113,7 +128,8 @@ def Menu():
     print("2. Ver órdenes")
     print("3. Salir")
 
-#todo Se visualiza la tabla con la orden que seleccione el ususario
+
+# todo Se visualiza la tabla con la orden que seleccione el ususario
 def ver_ordenes():
     print("\n------- VER ÓRDENES --------")
     try:
@@ -124,7 +140,7 @@ def ver_ordenes():
 
     cursor.execute(
         "SELECT ordenID, productoID, cantidad, precioUnitario FROM detalleordenes WHERE ordenID = %s",
-        (orden_id,)
+        (orden_id,),
     )
     filas = cursor.fetchall()
 
@@ -132,33 +148,41 @@ def ver_ordenes():
         print(f"No se encontraron registros para la orden ID: {orden_id}")
         return
 
-    print(f"\n{'Orden ID':<10} | {'Producto ID':<12} | {'Cantidad':<10} | {'Precio Unit.':<12} | {'Subtotal':<10}")
+    print(
+        f"\n{'Orden ID':<10} | {'Producto ID':<12} | {'Cantidad':<10} | {'Precio Unit.':<12} | {'Subtotal':<10}"
+    )
     print("-" * 65)
 
     acumulado = 0
     for fila in filas:
-        subtotal = fila['cantidad'] * fila['precioUnitario']
+        subtotal = fila["cantidad"] * fila["precioUnitario"]
         acumulado += subtotal
-        print(f"{fila['ordenID']:<10} | {fila['productoID']:<12} | {fila['cantidad']:<10} | {fila['precioUnitario']:<12.2f} | {subtotal:<10.2f}")
-    
+        print(
+            f"{fila['ordenID']:<10} | {fila['productoID']:<12} | {fila['cantidad']:<10} | {fila['precioUnitario']:<12.2f} | {subtotal:<10.2f}"
+        )
+
     print("-" * 65)
     print(f"Acumulado total de la orden: {acumulado:.2f}\n")
+
 
 def buscar_producto(producto_id: int):
     cursor.execute(
         "SELECT productoID, descripcion, precio, stock FROM Productos WHERE productoID = %s",
-        (producto_id,)
+        (producto_id,),
     )
     fila = cursor.fetchone()
     if fila is None:
         return None
-    return Producto(fila["productoID"], fila["descripcion"], fila["precio"], fila["stock"])
+    return Producto(
+        fila["productoID"], fila["descripcion"], fila["precio"], fila["stock"]
+    )
 
-#Registro de las ordenes
+
+# Registro de las ordenes
 def registrar_orden():
     print("\n--- REGISTRAR NUEVA ORDEN ---")
     orden = Orden(None, [])
-    contador = 1   # detalleID temporal; el real lo genera la BD
+    contador = 1  # detalleID temporal; el real lo genera la BD
 
     while True:
         id_producto = input("\nID del producto (Enter para terminar): ").strip()
@@ -192,15 +216,16 @@ def registrar_orden():
     orden.imprimir()
 
     if input("\n¿Confirmar orden? (s/n): ").strip().lower() == "s":
-        orden.insertar_orden()      # aquí se guarda, una sola vez
+        orden.insertar_orden()  # aquí se guarda, una sola vez
     else:
         print("\nOrden cancelada.")
+
 
 def main():
     while True:
         Menu()
         opcion = input("\nSeleccione una opción: ").strip()
-        
+
         if opcion == "1":
             registrar_orden()
         elif opcion == "2":
@@ -211,7 +236,8 @@ def main():
         else:
             print("\nOpción inválida. Por favor, intente de nuevo.")
 
+
 if __name__ == "__main__":
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
     main()
     print("\n. . . H e c h o")
