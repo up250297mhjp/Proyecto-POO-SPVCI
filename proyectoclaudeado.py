@@ -82,7 +82,7 @@ class Orden:
                 # Descuenta stock solo si todavía alcanza
                 cursor.execute(
                     """UPDATE Productos SET stock = stock - %s
-                       WHERE productoID = %s AND stock >= %s""",
+                       WHERE productoID = %s""",
                     (d.cantidad, d.producto.productoID, d.cantidad)
                 )
                 if cursor.rowcount == 0:

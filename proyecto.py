@@ -41,6 +41,15 @@ class Detalle_orden:
         subtotal = self.cantidad * self.producto.get_precio()
         return subtotal
 
+    def insertar_detalle(self, ordenID):
+        precio_unitario = self.producto.get_precio()
+        print("Se imprime el precio unitario: ", precio_unitario)
+        id_generado = cursor.lastrowid  # Obtener el ID generado por la base de datos
+        sql = "INSERT INTO detalleordenes (ordenID, productoID, cantidad, precioUnitario) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (ordenID, self.producto.productoID, self.cantidad, precio_unitario))
+        conn.commit()
+        self.imprimir()
+
     def imprimir(self):
         print(f"Detalle ID: {self.detalleID}, Cantidad: {self.cantidad}, Producto: {self.producto.descripcion}")
 
@@ -55,26 +64,45 @@ class Orden:
         return total
 
     def addItem(self, detalleID, cantidad, producto: Producto):
-        detalle = Detalle_orden(detalleID, cantidad, producto, Detalle_orden.subtotal_detalle())
-        self.detalles.append(detalle)
-        Orden.insertar_orden(self, self.ordenID, self.fecha, self.detalles)
+        self.detalles.append(Detalle_orden(detalleID, cantidad, producto))
 
     def imprimir(self):
         print(f"Orden ID: {self.ordenID}, Fecha: {self.fecha}, Total: {self.total_orden()}")
         for detalle in self.detalles:
             detalle.imprimir()
 
-    def insertar_orden(self, ordenID, fecha, detalles):
-        sql = "INSERT INTO ordenes (fecha) VALUES (%s)"
+    def insertar_orden(self) -> bool:
+        """Guarda la orden, sus detalles y descuenta stock. Todo o nada."""
+        try:
+            sql = "INSERT INTO ordenes (fecha) VALUES (%s)"
+            cursor.execute(sql, (self.fecha,))
+            #cursor.execute("INSERT INTO ordenes (fecha) VALUES (%s)", (self.fecha,))
+            self.ordenID = cursor.lastrowid      # ID generado por MySQL
 
-        cursor.execute(sql, (fecha))
-        conn.commit()
-        print(f"Orden :'{ordenID}' insertada correctamente.")
+            for d in self.detalles:
+                cursor.execute(
+                    """INSERT INTO detalleordenes
+                       (ordenID, productoID, cantidad, precioUnitario)
+                       VALUES (%s, %s, %s, %s)""",
+                    (self.ordenID, d.producto.productoID, d.cantidad, d.producto.get_precio())
+                )
+                # Descuenta stock solo si todavía alcanza
+                cursor.execute(
+                    """UPDATE Productos SET stock = stock - %s
+                       WHERE productoID = %s""",
+                    (d.cantidad, d.producto.productoID)
+                )
+                if cursor.rowcount == 0:
+                    raise ValueError(f"Stock insuficiente para '{d.producto.descripcion}'")
 
+            conn.commit()
+            print(f"\nOrden #{self.ordenID} registrada correctamente.")
+            return True
+        except Exception as e:
+            conn.rollback()   # deshace TODO lo de esta orden
+            print(f"\nNo se pudo guardar la orden: {e}")
+            return False
 
-
-def registrar_nueva_orden():
-    print("\n--- REGISTRAR NUEVA ORDEN ---")
 
 def Menu():
     print("\n==============================")
@@ -87,29 +115,85 @@ def Menu():
 #todo Se visualiza la tabla con la orden que seleccione el ususario
 def ver_ordenes():
     print("\n------- VER ÓRDENES --------")
-    orden_id = input("Ingrese el ID de la orden que desea consultar: ").strip()
-    print(f"\n{'Orden ID:':<15} {'Producto ID':<15} {'Cantidad':<10} {'Precio Unitario ':<10} {'Subtotal':>10}")
-    print(f"{'-'*15} | {'-'*15} | {'-'*10} | {'-'*10} | {'-'*10}")
-    
-
-def registrar_orden():
-    print("\n--- NUEVA ORDEN ---")
     try:
-        ordenID = int(input("Ingrese el ID de la orden: "))
+        orden_id = int(input("Ingrese el ID de la orden que desea consultar: ").strip())
     except ValueError:
-        print("Error: El ID debe ser un número entero.")
+        print("El ID de la orden debe ser un número entero.")
         return
 
-    mi_orden = Orden(ordenID)
-    contador_detalles = 1
+    cursor.execute(
+        "SELECT ordenID, productoID, cantidad, precioUnitario FROM detalleordenes WHERE ordenID = %s",
+        (orden_id,)
+    )
+    filas = cursor.fetchall()
+
+    if not filas:
+        print(f"No se encontraron registros para la orden ID: {orden_id}")
+        return
+
+    print(f"\n{'Orden ID':<10} | {'Producto ID':<12} | {'Cantidad':<10} | {'Precio Unit.':<12} | {'Subtotal':<10}")
+    print("-" * 65)
+
+    acumulado = 0
+    for fila in filas:
+        subtotal = fila['cantidad'] * fila['precioUnitario']
+        acumulado += subtotal
+        print(f"{fila['ordenID']:<10} | {fila['productoID']:<12} | {fila['cantidad']:<10} | {fila['precioUnitario']:<12.2f} | {subtotal:<10.2f}")
+    
+    print("-" * 65)
+    print(f"Acumulado total de la orden: {acumulado:.2f}\n")
+
+def buscar_producto(producto_id: int):
+    cursor.execute(
+        "SELECT productoID, descripcion, precio, stock FROM Productos WHERE productoID = %s",
+        (producto_id,)
+    )
+    fila = cursor.fetchone()
+    if fila is None:
+        return None
+    return Producto(fila["productoID"], fila["descripcion"], fila["precio"], fila["stock"])
+
+#Registro de las ordenes
+def registrar_orden():
+    print("\n--- REGISTRAR NUEVA ORDEN ---")
+    orden = Orden(datetime.now(), [])
+    contador = 1   # detalleID temporal; el real lo genera la BD
 
     while True:
-        try:
-            prod_id = int(input("\nIngrese el ID del producto: "))
-        except ValueError:
-            print("ID inválido, intente de nuevo.")
+        id_producto = input("\nID del producto (Enter para terminar): ").strip()
+        if id_producto == "":
+            break
+        if not id_producto.isdigit():
+            print("El ID debe ser un número.")
             continue
-        
+
+        producto = buscar_producto(int(id_producto))
+        if producto is None:
+            print("No existe un producto con ese ID.")
+            continue
+
+        producto.imprimir()
+
+        cant = input("Cantidad: ").strip()
+        cantidad = int(cant)
+
+        # Considera lo que ya agregaste de este mismo producto en la orden aqui iba lo de ya pedido XD
+
+        orden.addItem(contador, cantidad, producto)
+        contador += 1
+        print("Producto agregado.")
+
+    if not orden.detalles:
+        print("\nOrden vacía, no se registró nada.")
+        return
+
+    print("\n--- RESUMEN ---")
+    orden.imprimir()
+
+    if input("\n¿Confirmar orden? (s/n): ").strip().lower() == "s":
+        orden.insertar_orden()      # aquí se guarda, una sola vez
+    else:
+        print("\nOrden cancelada.")
 
 def main():
     while True:
@@ -117,7 +201,7 @@ def main():
         opcion = input("\nSeleccione una opción: ").strip()
         
         if opcion == "1":
-            registrar_nueva_orden()
+            registrar_orden()
         elif opcion == "2":
             ver_ordenes()
         elif opcion == "3":
